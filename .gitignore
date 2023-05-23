@@ -1,0 +1,16 @@
+.idea/
+
+__pycache__/
+*.gz
+*.pt
+*.png
+*.npy
+
+# Unit test / coverage reports
+.coverage
+
+log
+
+dist
+build
+.pytest_cache
