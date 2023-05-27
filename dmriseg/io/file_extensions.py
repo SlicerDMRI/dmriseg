@@ -6,26 +6,26 @@ fname_sep = "."
 asterisk = "*"
 
 
-class LutDataExtension(enum.Enum):
+class LutFileExtension(enum.Enum):
     LUT = "lut"
 
 
-class TextSepDataExtension(enum.Enum):
+class DelimitedValuesFileExtension(enum.Enum):
     CSV = "csv"
     TSV = "tsv"
 
 
-class NiftiDataExtension(enum.Enum):
+class NiftiFileExtension(enum.Enum):
     NII = "nii"
 
 
-class NrrdDataExtension(enum.Enum):
+class NrrdFileExtension(enum.Enum):
     NRRD = "nrrd"
 
 
-class Compression(enum.Enum):
+class CompressedFileExtension(enum.Enum):
     GZ = "gz"
 
 
-class PyTorchCheckpointExtension(enum.Enum):
+class PyTorchCheckpointFileExtension(enum.Enum):
     PT = "pt"

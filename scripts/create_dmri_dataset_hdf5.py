@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 
 from dmriseg.config.parsing_utils import parse_dataset_creation_config_file
-from dmriseg.io.file_extensions import Compression
+from dmriseg.io.file_extensions import CompressedFileExtension
 from dmriseg.io.hdf5_utils import create_hdf5_dataset
 
 
@@ -50,7 +50,7 @@ def main():
     ) = _parse_args(args.cfg_fname)
 
     # Assume all NIfTI files are compressed
-    compression = Compression.GZ
+    compression = CompressedFileExtension.GZ
     # When using np.float16 the error may be non-negligible; tested with some
     # values and the significant value is at the 4th decimal place for an FA
     # map. For np.float32, the error is 0.

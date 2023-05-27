@@ -11,10 +11,10 @@ import numpy as np
 import pandas as pd
 
 from dmriseg.io.file_extensions import (
-    Compression,
-    NiftiDataExtension,
-    NrrdDataExtension,
-    PyTorchCheckpointExtension,
+    CompressedFileExtension,
+    NiftiFileExtension,
+    NrrdFileExtension,
+    PyTorchCheckpointFileExtension,
     fname_sep,
 )
 from dmriseg.io.study_description import SubjectData
@@ -28,12 +28,19 @@ class DiffusionScalarMapFilenamePattern(enum.Enum):
     TRACE = "trace"
 
 
-def build_suffix(extension, compression: Union[None, Compression] = None):
+def build_suffix(
+    extension, compression: Union[None, CompressedFileExtension] = None
+):
 
     if compression is None:
         return fname_sep + extension.value
-    elif compression == Compression.GZ:
-        return fname_sep + extension.value + fname_sep + Compression.GZ.value
+    elif compression == CompressedFileExtension.GZ:
+        return (
+            fname_sep
+            + extension.value
+            + fname_sep
+            + CompressedFileExtension.GZ.value
+        )
     else:
         raise ValueError(f"Unknown compression: {compression}.")
 
@@ -42,7 +49,8 @@ def build_checkpoint_fname(dirname):
 
     return os.path.join(
         dirname,
-        checkpoint_file_rootname + build_suffix(PyTorchCheckpointExtension.PT),
+        checkpoint_file_rootname
+        + build_suffix(PyTorchCheckpointFileExtension.PT),
     )
 
 
@@ -58,14 +66,14 @@ def check_subject_data_inplace(df, in_dirname, scalar_map, compression):
 
         # Check dMRI scalar maps
         for _scalar_map in scalar_map:
-            # fname = os.path.join(dirname, _scalar_map + build_suffix(NiftiDataExtension.NII, compression=compression))
+            # fname = os.path.join(dirname, _scalar_map + build_suffix(NiftiFileExtension.NII, compression=compression))
             # ToDo
             # Rename or fix the pattern
             file_rootname = _sub_id + "-dwi_b1000_" + _scalar_map
             fname = os.path.join(
                 dirname,
                 file_rootname
-                + build_suffix(NrrdDataExtension.NRRD, compression=None),
+                + build_suffix(NrrdFileExtension.NRRD, compression=None),
             )
             assert check_file_existence(fname)
 
@@ -74,7 +82,7 @@ def check_subject_data_inplace(df, in_dirname, scalar_map, compression):
         fname = os.path.join(
             dirname,
             file_rootname
-            + build_suffix(NiftiDataExtension.NII, compression=compression),
+            + build_suffix(NiftiFileExtension.NII, compression=compression),
         )
         assert check_file_existence(fname)
 
@@ -122,10 +130,10 @@ def get_image_file_type(fname):
 
     ext = Path(fname).suffixes[0][1:]
 
-    if ext == NiftiDataExtension.NII.value:
-        return NiftiDataExtension
-    elif ext == NrrdDataExtension.NRRD.value:
-        return NrrdDataExtension
+    if ext == NiftiFileExtension.NII.value:
+        return NiftiFileExtension
+    elif ext == NrrdFileExtension.NRRD.value:
+        return NrrdFileExtension
     else:
         raise NotImplementedError(f"{ext} image file I/O not implemented.")
 
@@ -226,10 +234,10 @@ def read_image_data(fname):
 
     ext = get_image_file_type(fname)
 
-    if ext == NiftiDataExtension:
+    if ext == NiftiFileExtension:
         img = nib.load(fname)
         return img.get_fdata()
-    elif ext == NrrdDataExtension:
+    elif ext == NrrdFileExtension:
         data, header = nrrd.read(fname)
         return nrrd2nifti(data, header).get_fdata()
     else:
