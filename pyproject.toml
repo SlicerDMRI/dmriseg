@@ -17,6 +17,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
 dependencies = [
+    "antspyx",
+    "dipy",
     "fury",
     "h5py",
     "matplotlib",
@@ -27,6 +29,7 @@ dependencies = [
     "pynrrd",
     "pyyaml",
     "Pillow",
+    "scikit-image",
     "seg-metrics",
     "SUITPy",
     "torch",
