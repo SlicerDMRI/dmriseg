@@ -183,6 +183,7 @@ def main():
 
     # Get transforms
     transforms = get_transforms(
+        name=dataset,
         target_labels=datasets[dataset]["target_labels"],
         device=device,
         n_labels=datasets[dataset]["n_labels"],
