@@ -109,7 +109,7 @@ def main():
     model_pth = os.path.join(dout, "model_latest.pth")
     test_2d = False
     test_overfit = False
-    batch_size = 8
+    batch_size = 1
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # steps = 2*int(1e4)  # 2*int(1e6)
     use_amp = False  # Does not seem stable, best to disable
@@ -207,11 +207,11 @@ def main():
     )
     val_loader = DataLoader(vald_ds, batch_size=1, shuffle=False)
 
-    max_epochs = 500  # steps // num_train
+    max_epochs = 200  # steps // num_train
 
     # Get model
-    # model_name = "SegResNet16"
-    model_name = "UNet"
+    model_name = "SegResNet16"
+    # model_name = "UNet"
     out_channels = datasets[dataset]["n_labels"] + 1
     print(f"Number of output channels: {out_channels}")
     model = get_model(
