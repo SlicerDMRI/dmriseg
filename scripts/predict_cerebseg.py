@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import logging
 import os
 from pathlib import Path
 
@@ -21,11 +22,20 @@ from dmriseg.dataset.utils import (
     inference,
     write_dat,
 )
+from dmriseg.utils import logging_setup
 
 set_determinism(seed=0)
 torch.backends.cudnn.benchmark = True
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
+
+logger = logging.getLogger("root")
+logger_file_basename = "experiment_logfile.log"
+
+
+def _set_up_logger(log_fname):
+
+    logging_setup.set_up(log_fname)
 
 
 def _build_arg_parser():
@@ -63,6 +73,12 @@ def main():
     parser = _build_arg_parser()
     args = _parse_args(parser)
 
+    # Set up logger
+    logger_fname = Path(args.out_dirname).joinpath(logger_file_basename)
+    _set_up_logger(logger_fname)
+
+    logger.addHandler(logging.StreamHandler())
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     test_2d = False
     use_amp = False  # Does not seem stable, best to disable
@@ -70,14 +86,14 @@ def main():
 
     # DDP
     if "LOCAL_RANK" in os.environ:
-        print("Setting up DDP...", end="")
+        logger.info("Setting up DDP...", end="")
         ddp = True
         local_rank = int(os.environ["LOCAL_RANK"])
         # initialize the distributed training process, every GPU runs in a process
         dist.init_process_group(backend="nccl", init_method="env://")
         device = torch.device(f"cuda:{local_rank}")
         num_gpus = dist.get_world_size()
-        print("done!")
+        logger.info("done!")
     else:
         ddp = False
         num_gpus = 1

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import logging
 import os
 from pathlib import Path
 
@@ -24,11 +25,20 @@ from dmriseg.dataset.utils import (
     get_test_dataset_cerebparc,
     inference,
 )
+from dmriseg.utils import logging_setup
 
 set_determinism(seed=0)
 torch.backends.cudnn.benchmark = True
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
+
+logger = logging.getLogger("root")
+logger_file_basename = "experiment_logfile.log"
+
+
+def _set_up_logger(log_fname):
+
+    logging_setup.set_up(log_fname)
 
 
 def _build_arg_parser():
@@ -65,6 +75,12 @@ def main():
 
     parser = _build_arg_parser()
     args = _parse_args(parser)
+
+    # Set up logger
+    logger_fname = Path(args.out_dirname).joinpath(logger_file_basename)
+    _set_up_logger(logger_fname)
+
+    logger.addHandler(logging.StreamHandler())
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     test_2d = False

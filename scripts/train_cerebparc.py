@@ -34,13 +34,12 @@ from dmriseg.dataset.utils import (
     get_transforms,
     inference,
 )
+from dmriseg.utils import logging_setup
 from dmriseg.visualization.plot_utils import (
     boxplot_channel_metric,
     get_label_cmap,
     plot_loss_and_metric,
 )
-
-# from dmriseg.utils import logging_setup
 
 set_determinism(seed=0)
 torch.backends.cudnn.benchmark = True
@@ -49,6 +48,11 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
 
 logger = logging.getLogger("root")
 logger_file_basename = "experiment_logfile.log"
+
+
+def _set_up_logger(log_fname):
+
+    logging_setup.set_up(log_fname)
 
 
 def _build_arg_parser():
@@ -107,10 +111,10 @@ def main():
     args = _parse_args(parser)
 
     # Set up logger
-    # logger_fname = Path(args.out_dirname).joinpath(logger_file_basename)
-    # _set_up_logger(logger_fname)
+    logger_fname = Path(args.out_dirname).joinpath(logger_file_basename)
+    _set_up_logger(logger_fname)
 
-    # logger.addHandler(logging.StreamHandler())
+    logger.addHandler(logging.StreamHandler())
 
     # Parameters
     dataset = "cerebellum_cerebparc"
@@ -132,21 +136,21 @@ def main():
         os.makedirs(dout, exist_ok=True)
     elif os.path.isdir(dout) and test_overfit:
         shutil.rmtree(dout)
-    print(dout)
+    logger.info(dout)
     model_pth = None if not os.path.exists(model_pth) else model_pth
     log_dir = dout + "/runs"
     writer = SummaryWriter(log_dir)
 
     # DDP
     if "LOCAL_RANK" in os.environ:
-        print("Setting up DDP...", end="")
+        logger.info("Setting up DDP...", end="")
         ddp = True
         local_rank = int(os.environ["LOCAL_RANK"])
         # initialize the distributed training process, every GPU runs in a process
         dist.init_process_group(backend="nccl", init_method="env://")
         device = torch.device(f"cuda:{local_rank}")
         num_gpus = dist.get_world_size()
-        print("done!")
+        logger.info("done!")
     else:
         ddp = False
         num_gpus = 1
@@ -227,7 +231,7 @@ def main():
     model_name = "SegResNet16"
     # model_name = "UNet"
     out_channels = datasets[dataset]["n_labels"] + 1
-    print(f"Number of output channels: {out_channels}")
+    logger.info(f"Number of output channels: {out_channels}")
     model = get_model(
         model_name, out_channels, device, test_2d=test_2d, model_pth=model_pth
     )
@@ -300,9 +304,9 @@ def main():
         )
 
     # Train/Eval
-    print("-" * 64)
-    print("Starting training from epoch {}".format(meta_data["epoch"]))
-    print("-" * 64)
+    logger.info("-" * 64)
+    logger.info("Starting training from epoch {}".format(meta_data["epoch"]))
+    logger.info("-" * 64)
 
     best_metric = meta_data["best_metric"]
     loss_values = meta_data["loss_values"]
@@ -379,7 +383,7 @@ def main():
                 axs[0, 2].axis("off")
 
         epoch_loss /= step_epoch
-        print(
+        logger.info(
             f"EPOCH={epoch + 1:{' '}{len(str(max_epochs))}}/{max_epochs} |__LOSS (N={num_train})={epoch_loss:.4f}  |  {get_timestamp()}"
         )
         writer.add_scalar("Loss/train", epoch_loss, epoch)
@@ -458,14 +462,14 @@ def main():
 
                 metric_values.append(metric)
 
-                print(
+                logger.info(
                     f"EPOCH={epoch + 1:{' '}{len(str(max_epochs))}}/{max_epochs} |____METRIC (N={num_val})={metric:.4f}"
                 )
 
                 writer.add_scalar("Metric/eval", metric, epoch)
                 writer.flush()
                 for i in range(0, len(metric_batch), 10):
-                    print(
+                    logger.info(
                         " " * (13 + len(str(max_epochs)))
                         + "|______"
                         + ", ".join(
@@ -507,7 +511,7 @@ def main():
 
             scheduler.step(valid_loss)
             _lr = scheduler._last_lr
-            print(f"Learning rate is: {_lr}")
+            logger.info(f"Learning rate is: {_lr}")
 
         torch.save(model.state_dict(), os.path.join(dout, "model_latest.pth"))
         writer.close()

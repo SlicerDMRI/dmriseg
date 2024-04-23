@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -28,6 +29,8 @@ from monai.transforms import (  # RandomizableTransform,; RandSpatialCropd,; Ran
 )
 
 # from monai.utils import set_determinism
+
+logger = logging.getLogger("root")
 
 
 def get_timestamp():
@@ -565,7 +568,7 @@ def get_model(name, out_channels, device, test_2d=False, model_pth=None):
             }
         net.load_state_dict(checkpoint)
     n_parameters = sum(p.numel() for p in net.parameters() if p.requires_grad)
-    print(f"Model has {n_parameters:,} trainable parameters")
+    logger.info(f"Model has {n_parameters:,} trainable parameters")
     return net
 
 
