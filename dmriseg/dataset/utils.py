@@ -111,7 +111,7 @@ class MapLabelsCerebellumParc(MapTransform):
 
     @staticmethod
     def label_mapping():
-        l0 = list(range(1, 35))
+        l0 = (1, 2)  # list(range(1, 35))
         mapping = {}
         for i0 in l0:
             mapping[i0] = i0

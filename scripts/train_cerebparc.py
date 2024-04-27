@@ -19,17 +19,17 @@ from monai.data import (
     decollate_batch,
     partition_dataset,
 )
-from monai.losses import DiceCELoss
+from monai.losses import HausdorffDTLoss  # DiceCELoss
 from monai.metrics import DiceMetric
 from monai.utils import set_determinism  # first
+from monai.utils.enums import LossReduction
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.tensorboard import SummaryWriter
 
-from dmriseg.dataset.utils import (
+from dmriseg.dataset.utils import (  # get_suit_classnames,
     extract_slice,
     get_datasets_cerebparc,
     get_model,
-    get_suit_classnames,
     get_timestamp,
     get_transforms,
     inference,
@@ -157,7 +157,10 @@ def main():
     torch.cuda.set_device(device)
 
     # Remove background
-    classnames = get_suit_classnames()[1:]
+    classnames = (
+        "Left_Fastigial",
+        "Right_Fastigial",
+    )  # get_suit_classnames()[1:]
 
     # Get files
     datasets = get_datasets_cerebparc(
@@ -225,12 +228,12 @@ def main():
     )
     val_loader = DataLoader(valid_ds, batch_size=1, shuffle=False)
 
-    max_epochs = 200  # steps // num_train
+    max_epochs = 300  # steps // num_train
 
     # Get model
     model_name = "SegResNet16"
     # model_name = "UNet"
-    out_channels = datasets[dataset]["n_labels"] + 1
+    out_channels = 3  # fastigial  datasets[dataset]["n_labels"] + 1
     logger.info(f"Number of output channels: {out_channels}")
     model = get_model(
         model_name, out_channels, device, test_2d=test_2d, model_pth=model_pth
@@ -245,13 +248,23 @@ def main():
         )
 
     # Get loss, optimiser and metrics
-    loss_function = DiceCELoss(
+    # loss_function = DiceCELoss(
+    #    to_onehot_y=True,
+    #    softmax=True,
+    #    include_background=False,
+    #    smooth_nr=1e-5,
+    #    smooth_dr=1e-5,
+    #    squared_pred=True,
+    # )
+    loss_function = HausdorffDTLoss(
         to_onehot_y=True,
         softmax=True,
         include_background=False,
-        smooth_nr=1e-5,
-        smooth_dr=1e-5,
-        squared_pred=True,
+        alpha=2.0,
+        sigmoid=False,
+        other_act=None,
+        reduction=LossReduction.MEAN,
+        batch=False,
     )
     optimizer = torch.optim.Adam(
         model.parameters(), lr=math.sqrt(batch_size * num_gpus) * lr
