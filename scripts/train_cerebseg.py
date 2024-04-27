@@ -33,9 +33,10 @@ from monai.data import (
     decollate_batch,
     partition_dataset,
 )
-from monai.losses import DiceLoss  # , DiceCELoss
+from monai.losses import DiceLoss, HausdorffDTLoss  # , DiceCELoss
 from monai.metrics import DiceMetric
 from monai.utils import set_determinism  # first
+from monai.utils.enums import LossReduction
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.tensorboard import SummaryWriter
 
@@ -251,6 +252,16 @@ def main():
         smooth_nr=1e-5,
         smooth_dr=1e-5,
         squared_pred=True,
+    )
+    loss_function = HausdorffDTLoss(
+        to_onehot_y=True,
+        softmax=True,
+        include_background=False,
+        alpha=2.0,
+        sigmoid=False,
+        other_act=None,
+        reduction=LossReduction.MEAN,
+        batch=False,
     )
     optimizer = torch.optim.Adam(
         model.parameters(), lr=math.sqrt(batch_size * num_gpus) * lr
