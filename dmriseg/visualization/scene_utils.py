@@ -31,7 +31,7 @@ slice_actor_kwargs_name = "slice_actor_kwargs"
 
 
 @fill_doc
-def screenshot_slice(img, axis, slice_ids, size):
+def screenshot_slice(img, axis, slice_ids, size, **kwargs):
     """Take a screenshot of the given image with the appropriate slice data at
     the provided slice indices.
 
@@ -43,6 +43,8 @@ def screenshot_slice(img, axis, slice_ids, size):
     slice_ids : array-like
         Slice indices.
     %(size)s
+    kwargs : dict
+        Keyword arguments for `create_volume_slice_actor`.
 
     Returns
     -------
@@ -59,6 +61,7 @@ def screenshot_slice(img, axis, slice_ids, size):
             axis,
             idx,
             offset=0.0,
+            **kwargs,
         )
         scene = create_scene([slice_actor], axis, idx, img.shape)
         scene_arr = window.snapshot(scene, size=size)
@@ -265,6 +268,7 @@ def rgb2gray4pil(rgb_arr, alpha=255):
     """
 
     def _rgb2gray(rgb):
+        # img = Image.fromarray(rgb).convert("L")
         img = Image.fromarray(np.uint8(rgb * 255)).convert("L")
         # ToDo
         # When calling img.show() the below has the expected effect, but adds
@@ -306,9 +310,7 @@ def create_image_from_scene(scene, size, mode=None, cmap_name=None):
         # [0, 255] range and convert to uint8 for Pillow
         _arr = (cmap(_arr) * 255).astype("uint8")
 
-    # Need to flip the array due to some bug in the FURY image buffer. Might be
-    # solved in newer versions of the package.
-    image = Image.fromarray(_arr, mode=mode).transpose(Image.FLIP_TOP_BOTTOM)
+    image = Image.fromarray(_arr, mode=mode)
 
     return image.resize(size, Image.LANCZOS)
 
@@ -538,9 +540,17 @@ def compose_mosaic(
         _img_arr = rgb2gray4pil(img_arr)
         _mask_arr = rgb2gray4pil(mask_arr)
 
+        # ToDo
+        # Workaround to avoid calling rgb2gray4pil on a labelmap array that
+        # has been colored with (discrete values built with) a VTK LUT, as
+        # opposed to the case when using a mpl colormap name (e.g. "viridis")
         _labelmap_arr = None
-        if len(labelmap_arr):
+        if len(labelmap_arr) and labelmap_cmap_name is not None:
             _labelmap_arr = rgb2gray4pil(labelmap_arr, alpha=127)
+        elif len(labelmap_arr):
+            _labelmap_arr = labelmap_arr
+        else:
+            raise NotImplementedError("Not implemented.")
 
         # Draw the image (and labelmap overlay, if any) in the cell
         draw_scene_at_pos(
