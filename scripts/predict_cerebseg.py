@@ -32,6 +32,8 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
 logger = logging.getLogger("root")
 logger_file_basename = "experiment_logfile.log"
 
+logging.getLogger("matplotlib.font_manager").disabled = True
+
 
 def _set_up_logger(log_fname):
 
