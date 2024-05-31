@@ -472,11 +472,28 @@ def main():
                     )
 
                 if metric > best_metric:
+                    logger.info(
+                        f"Metric: {metric} at current epoch improves best metric: {best_metric}"
+                    )
                     best_metric = metric
                     torch.save(
                         model.state_dict(),
                         os.path.join(dout, "model_best.pth"),
                     )
+                    logger.info("Model saved.")
+
+                    # Plot the best loss and metrics
+                    plot_loss_and_metric(
+                        axs, loss_values, metric_values, validation_interval
+                    )
+                    plt.close(fig)
+
+                    plt.suptitle(
+                        f"EPOCH={epoch}, LOSS={epoch_loss:.4f}, METRIC={metric:.4f}"
+                    )
+                    fig.tight_layout()
+                    plt.savefig(os.path.join(dout, "outputs_best_model.png"))
+                    plt.close(fig)
 
                 plot_loss_and_metric(
                     axs, loss_values, metric_values, validation_interval
@@ -487,6 +504,7 @@ def main():
                 )
                 fig.tight_layout()
                 plt.savefig(os.path.join(dout, "outputs.png"))
+                plt.close(fig)
 
             scheduler.step(valid_loss)
             _lr = scheduler._last_lr
