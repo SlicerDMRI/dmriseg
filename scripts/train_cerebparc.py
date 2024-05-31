@@ -493,6 +493,34 @@ def main():
                     )
                     logger.info("Model saved.")
 
+                    # Plot the best loss and metrics
+                    plot_loss_and_metric(
+                        axs, loss_values, metric_values, validation_interval
+                    )
+
+                    plt.suptitle(
+                        f"EPOCH={epoch}, LOSS={epoch_loss:.4f}, METRIC={metric:.4f}"
+                    )
+                    fig.tight_layout()
+                    plt.savefig(os.path.join(dout, "outputs_best_model.png"))
+                    plt.close(fig)
+
+                    title = f"EPOCH={epoch}"
+                    grid = True
+                    _fig = boxplot_channel_metric(
+                        metric_c.cpu().numpy(),
+                        "Dice",
+                        classnames,
+                        title=title,
+                        grid=grid,
+                    )
+                    _fig.savefig(
+                        os.path.join(
+                            dout, "dice_channel_boxplot_best_model.png"
+                        )
+                    )
+                    plt.close(_fig)
+
                 plot_loss_and_metric(
                     axs, loss_values, metric_values, validation_interval
                 )
