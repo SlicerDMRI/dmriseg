@@ -472,11 +472,15 @@ def main():
                     )
 
                 if metric > best_metric:
+                    logger.info(
+                        f"Metric: {metric} at current epoch improves best metric: {best_metric}"
+                    )
                     best_metric = metric
                     torch.save(
                         model.state_dict(),
                         os.path.join(dout, "model_best.pth"),
                     )
+                    logger.info("Model saved.")
 
                 plot_loss_and_metric(
                     axs, loss_values, metric_values, validation_interval
