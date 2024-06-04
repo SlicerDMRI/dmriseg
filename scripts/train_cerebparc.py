@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import copy
 import logging
 import math
 import os
@@ -494,8 +495,9 @@ def main():
                     logger.info("Model saved.")
 
                     # Plot the best loss and metrics
+                    _axs = copy.deepcopy(axs)
                     plot_loss_and_metric(
-                        axs, loss_values, metric_values, validation_interval
+                        _axs, loss_values, metric_values, validation_interval
                     )
 
                     plt.suptitle(
