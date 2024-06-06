@@ -109,6 +109,8 @@ def main():
     df_particip = pd.read_csv(args.in_participants_fname, sep=sep)
     sub_ids = sorted(df_particip[participant_label_id].values)
 
+    assert len(gnd_th_lmap_fnames) == len(pred_lmap_fnames) == len(sub_ids)
+
     df_lut = pd.read_csv(args.in_labels_fname, sep=sep)
     labels = sorted(df_lut[lut_class_id_label].values)
 
