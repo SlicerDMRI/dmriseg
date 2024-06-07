@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from vtkmodules.vtkCommonCore import vtkLookupTable
 
 from dmriseg.data.lut.utils import (
     build_atlas_version_kwargs,
@@ -70,6 +73,7 @@ def get_or_create_cmap(cmap_name):
             # Name colormap with the file rootname
             cmap_name = Path(cmap_name).with_suffix("").stem
             cmap = mpl.colors.ListedColormap(_cmap, name=cmap_name)
+            # cmap = mpl.colors.LinearSegmentedColormap.from_list(cmap_name, _cmap)
         else:
             atlas, version = get_atlas_from_cmap_name(cmap_name)
             kwargs = build_atlas_version_kwargs(atlas, version)
@@ -82,3 +86,23 @@ def get_or_create_cmap(cmap_name):
         if cmap_name not in list(colormaps):
             plt.register_cmap(cmap_name, cmap)
         return plt.get_cmap(cmap_name)
+
+
+def create_vtk_color_lut(cmap_name):
+
+    if not Path(cmap_name).is_file():
+        raise NotImplementedError(
+            f"Not implemented for ``cmap_name`` values that do not exist as a file. Provided: {cmap_name}."
+        )
+
+    lut = read_lut_from_tsv2(cmap_name)
+    # Need colors to be in [0,1] for VTK
+    colors = list([list(map(lambda x: x / 255, val)) for val in lut.values()])
+    lut = vtkLookupTable()
+    lut.SetNumberOfTableValues(len(colors))
+    lut.SetTableRange(0, lut.GetNumberOfTableValues())
+
+    for i in range(lut.GetNumberOfTableValues()):
+        lut.SetTableValue(i, [*colors[i], 1.0])
+
+    return lut
