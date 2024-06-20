@@ -98,6 +98,12 @@ def _build_arg_parser():
         help="Output dirname",
         type=Path,
     )
+    parser.add_argument(
+        "--lr",
+        help="Learning rate",
+        type=float,
+        default=1.0e-4,
+    )
     return parser
 
 
@@ -133,7 +139,7 @@ def main():
     # validation_steps = 100  # 5000
     spatial_size = (192,) * 3
     patch_size = (192,) * 3
-    lr = 1.0e-4
+    lr = args.lr
     # Make output folder
     if not os.path.isdir(dout):
         os.makedirs(dout, exist_ok=True)
@@ -143,6 +149,9 @@ def main():
     model_pth = None if not os.path.exists(model_pth) else model_pth
     log_dir = dout + "/runs"
     writer = SummaryWriter(log_dir)
+
+    logger.info(f"learning rate: {lr}")
+    logger.info(f"learning rate instance: {type(lr)}")
 
     # DDP
     if "LOCAL_RANK" in os.environ:
