@@ -31,11 +31,11 @@ elif [[ ${contrast} == "md" ]]; then
   contrast_folder_label=dmri_hcp_md
 elif [[ ${contrast} == "rd" ]]; then
   contrast_folder_label=dmri_hcp_rd
-elif [[ ${contrast} == "evals_e1" ]]; then
+elif [[ ${contrast} == "evalse1" ]]; then
   contrast_folder_label=dmri_hcp_evals_e1
-elif [[ ${contrast} == "evals_e2" ]]; then
+elif [[ ${contrast} == "evalse2" ]]; then
   contrast_folder_label=dmri_hcp_evals_e2
-elif [[ ${contrast} == "evals_e3" ]]; then
+elif [[ ${contrast} == "evalse3" ]]; then
   contrast_folder_label=dmri_hcp_evals_e3
 elif [[ ${contrast} == "ak" ]]; then
   contrast_folder_label=dmri_hcp_ak
