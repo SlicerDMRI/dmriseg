@@ -18,7 +18,7 @@ class Measure(enum.Enum):
     HAUSDORFF99 = "hd99"
     JACCARD = "jaccard"
     MEAN_SURFACE_DISTANCE = "msd"
-    GT_VOLUME = "pred_volume"
+    GT_VOLUME = "gt_volume"
     PRED_VOLUME = "pred_volume"
     VOLUME_ERROR = "vol_err"
     VOLUME_SIMILARITY = "vs"
