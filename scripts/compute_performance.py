@@ -47,6 +47,12 @@ def compute_measures(
         labels,
         exclude_background=exclude_background,
     )[0]
+    # seg_metrics <= 1.2.7 has a bug in the VS sign so reverse it
+    # https://github.com/Jingnan-Jia/segmentation_metrics/issues/30
+    # ToDo
+    # Remove when a new version is released
+    _metrics["vs"] = list(map(lambda x: -x, _metrics["vs"]))
+
     vol_err = compute_volume_error(gnd_th_img, pred_img, labels)
     cm_dist, _, _ = compute_center_of_mass_distance(
         gnd_th_img, pred_img, labels
