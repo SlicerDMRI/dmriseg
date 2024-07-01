@@ -264,7 +264,7 @@ def compute_center_of_mass_distance(img1, img2, labels):
 
 
 def compute_labelmap_volume(img_data, label_list, resolution):
-
+    # Checked with the Slicer segment statistics: results are OK
     labelwise_data = np.asarray(
         [np.where(img_data != value, 0, img_data) for value in label_list]
     )
