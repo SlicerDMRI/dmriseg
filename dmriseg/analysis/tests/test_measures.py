@@ -6,6 +6,7 @@ import numpy as np
 
 from dmriseg.analysis.measures import (
     compute_center_of_mass_distance,
+    compute_labelmap_volume,
     compute_metrics,
     compute_relevant_labels,
     fill_missing_values,
@@ -355,6 +356,37 @@ def test_compute_center_of_mass_distance():
     # assert len(cm_dist) == len(labels)
     # assert len(centers1) == len(labels)
     # assert len(centers2) == len(labels)
+
+
+def test_compute_labelmap_volume():
+    image = np.array(
+        [
+            [
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        ]
+    ).astype(np.float32)
+    # Exclude the background
+    labels_img = sorted(map(int, np.unique(image)))
+    labels = list(
+        set(list(np.asarray(labels_img)[np.asarray(labels_img) != 0]))
+    )
+    label_vox_count = np.count_nonzero(image)
+    resolution = np.ones((3,))
+    vol = compute_labelmap_volume(image, labels, resolution)
+    assert np.allclose(vol, np.prod(resolution) * label_vox_count)
+
+    resolution = np.ones((3,)) * 1.25
+    vol = compute_labelmap_volume(image, labels, resolution)
+    assert np.allclose(vol, np.prod(resolution) * label_vox_count, atol=1e-3)
+
+    resolution = np.asarray([1.25, 2.0, 3.0])
+    vol = compute_labelmap_volume(image, labels, resolution)
+    assert np.allclose(vol, np.prod(resolution) * label_vox_count)
 
 
 def test_get_label_presence():
