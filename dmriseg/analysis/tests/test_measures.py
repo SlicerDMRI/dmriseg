@@ -226,6 +226,8 @@ def test_compute_center_of_mass_distance():
     assert [len(centers1) == len(labels)]
     assert [len(centers2) == len(labels)]
     assert [len(center) == len(img1.shape) for center in centers1]
+    assert np.allclose(centers1, centers2)
+    assert np.allclose(cm_dist, [0.0] * len(labels))
 
     # Display the labeled image and center of masses
     import matplotlib.pyplot as plt
@@ -264,6 +266,72 @@ def test_compute_center_of_mass_distance():
     assert [len(centers2) == len(labels)]
     assert [len(center) == len(img1.shape) for center in centers1]
     assert [len(center) == len(img1.shape) for center in centers2]
+
+    # Check with two very simple images with a single label and non-unit spacing
+    image1 = np.array(
+        [
+            [
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        ]
+    ).astype(np.float32)
+    image2 = np.array(
+        [
+            [
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        ]
+    ).astype(np.float32)
+    labels = sorted(map(int, np.unique(image1)))
+    img1 = nib.Nifti1Image(image1, affine=np.eye(4), dtype=np.float32)
+    img2 = nib.Nifti1Image(image2, affine=np.eye(4), dtype=np.float32)
+
+    cm_dist, centers1, centers2 = compute_center_of_mass_distance(
+        img1, img2, labels
+    )
+    assert [len(centers1) == len(labels)]
+    assert [len(centers2) == len(labels)]
+    assert np.allclose(cm_dist, np.asarray([0.13636364, 1.0]))
+
+    voxel_spacing = (1.25, 1.25, 1.25)
+    affine = np.diag(voxel_spacing + (1.0,))
+    img1 = nib.Nifti1Image(image1, affine=affine, dtype=np.float32)
+    img2 = nib.Nifti1Image(image2, affine=affine, dtype=np.float32)
+
+    cm_dist, centers1, centers2 = compute_center_of_mass_distance(
+        img1, img2, labels
+    )
+    assert [len(centers1) == len(labels)]
+    assert [len(centers2) == len(labels)]
+    assert np.allclose(cm_dist, np.asarray([0.17045455, 1.25]))
+
+    image2 = np.array(
+        [
+            [
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0],
+            ]
+        ]
+    ).astype(np.float32)
+    img2 = nib.Nifti1Image(image2, affine=affine, dtype=np.float32)
+
+    cm_dist, centers1, centers2 = compute_center_of_mass_distance(
+        img1, img2, labels
+    )
+    assert [len(centers1) == len(labels)]
+    assert [len(centers2) == len(labels)]
+    assert np.allclose(cm_dist, np.asarray([0.34090909, 2.5]))
 
     # img1_fname = "/mnt/data/connectome/suit/results/cer_seg_100307.nii"
     # img2_fname = "/mnt/data/connectome/suit/results/cer_seg_100307.nii"
