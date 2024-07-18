@@ -29,12 +29,20 @@ def append_label_to_fname(fname, label):
     return dirname / file_basename
 
 
+def get_slice_view_node_label(view_name):
+
+    if view_name == "coronal":
+        return "Green"
+    else:
+        raise NotImplementedError(f"View {view_name} not implemented")
+
+
 def set_layout(view_name):
 
-    if view_name == "Green":
+    if view_name == "coronal":
         layout_name = slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpGreenSliceView
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(f"View {view_name} not implemented")
 
     layout_manager = slicer.app.layoutManager()
     layout_manager.setLayout(layout_name)
@@ -264,8 +272,11 @@ def main():
     delay = 0.500  # in seconds
     time.sleep(delay)
 
+    slice_view_node_name = get_slice_view_node_label(args.view_name)
     params_pil = {"dpi": (dpi, dpi)}
-    capture_screenshot(args.view_name, args.offset, str(args.out_filename))
+    capture_screenshot(
+        slice_view_node_name, args.offset, str(args.out_filename)
+    )
     resize_image(args.out_filename, width, height, **params_pil)
 
     # If a mask filename is given, set the background to transparent
@@ -288,7 +299,7 @@ def main():
 
         # Save the mask for visual checking purposes
         mask_fname = append_label_to_fname(args.out_filename, mask_label)
-        capture_screenshot(args.view_name, args.offset, str(mask_fname))
+        capture_screenshot(slice_view_node_name, args.offset, str(mask_fname))
         resize_image(mask_fname, width, height, **params_pil)
 
         # Apply transparency to the pixels outside the mask in the volume
