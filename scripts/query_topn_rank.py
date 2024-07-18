@@ -20,7 +20,13 @@ from dmriseg.data.lut.utils import (
     get_diedrichsen_group_labels,
 )
 from dmriseg.io.file_extensions import DelimitedValuesFileExtension
-from dmriseg.io.utils import build_suffix, participant_label_id, underscore
+from dmriseg.io.utils import (
+    build_suffix,
+    fold_label,
+    participant_label_id,
+    underscore,
+)
+from dmriseg.utils.contrast_utils import get_contrast_from_dir_base
 
 topn_label = "top"
 
@@ -37,6 +43,34 @@ def compute_group_performance(df, group_name):
             df_subset.mean(axis=1).values, columns=[group_name], index=df.index
         )
         return df_group_mean
+
+
+def query_topn_scores(df, group_names, top_n, rank_group):
+
+    mean_df = pd.DataFrame()
+    for group_name in group_names:
+        # Compute the mean across all labels in group name
+        _mean_df = compute_group_performance(df, group_name.value)
+
+        # Concatenate to existing df horizontally
+        mean_df = pd.concat([mean_df, _mean_df], axis=1)
+
+    if top_n is None:
+        top_n = len(mean_df)
+
+    rank_group = SuitAtlasDiedrichsenGroups(rank_group).value
+    if rank_group is None:
+        rank_group = SuitAtlasDiedrichsenGroups.ALL.value
+
+    topn_rank_df = mean_df.sort_values([rank_group], ascending=False).head(
+        top_n
+    )
+
+    # Add the fold to locate more easily the subject at issue
+    folds = df.loc[topn_rank_df.index.values][fold_label].tolist()
+    topn_rank_df.insert(0, fold_label, folds)
+
+    return topn_rank_df
 
 
 def _build_arg_parser():
@@ -107,36 +141,26 @@ def main():
         SuitAtlasDiedrichsenGroups.CRUS,
     ]
 
-    # Put inside a method query_top_scores
-
-    mean_df = pd.DataFrame()
-    for group_name in group_names:
-        # Compute the mean across all labels in group name
-        _mean_df = compute_group_performance(df, group_name.value)
-
-        # Concatenate to existing df horizontally
-        mean_df = pd.concat([mean_df, _mean_df], axis=1)
-
-    top_n = args.top_n
-    if top_n is None:
-        top_n = len(mean_df)
-
-    rank_group = SuitAtlasDiedrichsenGroups(args.rank_group).value
-    if rank_group is None:
-        rank_group = SuitAtlasDiedrichsenGroups.ALL.value
-
-    topn_rank_df = mean_df.sort_values([rank_group], ascending=False).head(
-        top_n
+    # Rank the scores according to the mean performance across all labels in the
+    # given group name
+    topn_rank_df = query_topn_scores(
+        df, group_names, args.top_n, args.rank_group
     )
 
     suffix = build_suffix(ext)
+    # Assume a given dir structure, where the contrast can be told from the
+    # aggregate performance parent folder name
+    parent_dirname = args.in_performance_dirname.parent.name
+    contrast = get_contrast_from_dir_base(parent_dirname)
     file_basename = (
         measure
         + underscore
-        + rank_group
+        + args.rank_group
         + underscore
         + topn_label
-        + str(top_n)
+        + str(args.top_n)
+        + underscore
+        + contrast
         + suffix
     )
     out_fname = args.out_dirname / file_basename

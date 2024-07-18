@@ -41,3 +41,40 @@ def get_contrast_names_lut():
             ContrastNames.RK.value: 15,
         }
     )
+
+
+def get_contrast_from_dir_base(dirname):
+
+    # Build the labels for the i/o dirs/files
+    if dirname == "dmri_hcp_t1":
+        return ContrastNames.T1.value
+    elif dirname == "dmri_hcp_b0":
+        return ContrastNames.B0.value
+    elif dirname == "dmri_hcp_sphm_b1000-2000-3000":
+        return ContrastNames.DWI.value
+    elif dirname == "dmri_hcp_sphm_b1000":
+        return ContrastNames.DWI1k.value
+    elif dirname == "dmri_hcp_sphm_b2000":
+        return ContrastNames.DWI2k.value
+    elif dirname == "dmri_hcp_sphm_b3000":
+        return ContrastNames.DWI3k.value
+    elif dirname == "dmri_hcp_fa":
+        return ContrastNames.FA.value
+    elif dirname == "dmri_hcp_md":
+        return ContrastNames.MD.value
+    elif dirname == "dmri_hcp_rd":
+        return ContrastNames.RD.value
+    elif dirname == "dmri_hcp_evals_e1":
+        return ContrastNames.EVALS_E1.value
+    elif dirname == "dmri_hcp_evals_e2":
+        return ContrastNames.EVALS_E2.value
+    elif dirname == "dmri_hcp_evals_e3":
+        return ContrastNames.EVALS_E3.value
+    elif dirname == "dmri_hcp_ak":
+        return ContrastNames.AK.value
+    elif dirname == "dmri_hcp_mk":
+        return ContrastNames.MK.value
+    elif dirname == "dmri_hcp_rk":
+        return ContrastNames.RK.value
+    else:
+        raise NotImplementedError(f"Dirname not recognized: {dirname}")
