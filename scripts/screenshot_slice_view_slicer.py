@@ -284,6 +284,10 @@ def main():
         # Clean the scene
         slicer.mrmlScene.Clear(0)
 
+        # Load the volume, otherwise the mask is set to a position (offset,
+        # scale) that does not match the volume
+        load_data(args.in_volume_filename)
+
         # Load the mask
         slicer.util.loadSegmentation(args.in_mask_filename)
         # Removing the outline does not improve the outline effect that is seen
