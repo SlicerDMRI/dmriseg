@@ -14,6 +14,15 @@ pvalue_label = "pvalue"
 significance_label = "significance"
 statistic_label = "statistic"
 
+arg_label = "arg"
+x_label = "x"
+y_label = "y"
+
+test_description_label = "test_description"
+test_short_name_label = "test_short_name"
+stat_str_label = "stat_str"
+alternative_label = "alternative"
+
 
 def create_pairs(ref_contrast_name, contrast_name, labels):
     """Create all possible pairs between the labels and the contrast names."""
@@ -85,3 +94,24 @@ def create_df(
     return pd.concat(
         [df_metric_ref_melted, df_metric_melted], axis=0
     ).reset_index(drop=True)
+
+
+def describe_wilcoxon_ranksum(alternative=None):
+    return pd.DataFrame(
+        [["Wilcoxon rank sum", "wilco", "pvalue", alternative]],
+        columns=[
+            test_description_label,
+            test_short_name_label,
+            stat_str_label,
+            alternative_label,
+        ],
+    )
+
+
+def describe_measurements(contrast_names):
+
+    df = pd.DataFrame(
+        contrast_names, columns=[contrast_label], index=[x_label, y_label]
+    )
+    df.index.name = arg_label
+    return df

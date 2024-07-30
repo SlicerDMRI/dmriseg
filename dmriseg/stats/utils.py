@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import enum
+
 import numpy as np
 import pandas as pd
 
@@ -11,6 +13,10 @@ from dmriseg.utils.contrast_utils import get_contrast_names_lut
 
 contrast_label = "contrast"
 subject_label = "subject"
+
+
+class StatisticalTest(enum.Enum):
+    WILCOXON_RANKSUM = "wilcoxon_ranksum"
 
 
 def prepare_data_for_anova(dfs, measure, contrast_names):
