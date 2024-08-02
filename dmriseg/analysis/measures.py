@@ -27,6 +27,29 @@ class Measure(enum.Enum):
     LABEL_DETECTION_RATE = "lab_detect_rate"
 
 
+def is_higher_better(measure):
+
+    if measure == Measure.CENTER_OF_MASS_DISTANCE.value:
+        return False
+    elif measure == Measure.DICE.value:
+        return True
+    elif measure == Measure.HAUSDORFF95.value:
+        return False
+    elif measure == Measure.MEAN_SURFACE_DISTANCE.value:
+        return False
+    elif measure == Measure.VOLUME_SIMILARITY.value:
+        return True
+    elif measure == Measure.LABEL_DETECTION_RATE.value:
+        return True
+    else:
+        raise NotImplementedError(f"Measure {measure} not implemented")
+
+
+def is_ascending_sorting_better(measure):
+
+    return not is_higher_better(measure)
+
+
 # ToDo
 # Add a reporting module to serialize these into a CSV? or some io module?
 def compute_measures():
