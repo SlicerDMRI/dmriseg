@@ -32,8 +32,8 @@ from dmriseg.utils.contrast_utils import (
 performance_dir_label = "aggregate_performance"
 file_basename = "group_measures_all_mean"
 
+mean_label = "mean"
 rank_fname_label = "rank"
-avg_fname_label = "avg"
 mean_fname_label = "mean"
 measure_fname_label = "measure"
 mode_fname_label = "mode"
@@ -142,8 +142,9 @@ def main():
         )
 
     # Average across columns
-    avg_rank_df = rank_df.mean(axis=1)
-    avg_rank_df.index.name = contrast_label
+    mean_rank = rank_df.mean(axis=1)
+    mean_rank.index.name = contrast_label
+    mean_rank.name = mean_label
 
     # Compute the mode and the corresponding value on each row
     # Apply the function to each row
@@ -167,8 +168,8 @@ def main():
     fname = append_label_to_fname(fname, rank_fname_label)
     rank_df.to_csv(fname, sep=sep)
 
-    fname = append_label_to_fname(fname, avg_fname_label)
-    avg_rank_df.to_csv(fname, sep=sep)
+    fname = append_label_to_fname(fname, mean_fname_label)
+    mean_rank.to_csv(fname, sep=sep, columns=[mean_label])
 
     fname = append_label_to_fname(fname, mode_fname_label)
     mode_df.to_csv(fname, sep=sep)
