@@ -101,7 +101,7 @@ def main():
     # Plot the data distribution
     # width_pixels = 1920
     # height_pixels = 1080
-    dpi = 300
+    # dpi = 300
     # figsize = (width_pixels / dpi, height_pixels / dpi)
     # plt.figure(figsize=figsize, dpi=dpi)
 
@@ -125,7 +125,7 @@ def main():
 
     # Set the size of the figure
     # fig.set_size_inches(figsize)
-    plt.savefig(args.out_fname, dpi=dpi)
+    plt.savefig(args.out_fname)
 
 
 if __name__ == "__main__":
