@@ -13,25 +13,74 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from dmriseg.data.lut.utils import SuitAtlasDiedrichsenGroups
 from dmriseg.data.lut.utils import class_id_label as lut_class_id_label
-from dmriseg.data.lut.utils import class_name_label, read_lut_from_tsv2
+from dmriseg.data.lut.utils import (
+    class_name_label,
+    get_diedrichsen_group_labels,
+    read_lut_from_tsv2,
+)
+from dmriseg.io.file_extensions import FigureFileExtension
+from dmriseg.io.utils import build_suffix, group_fname_label, underscore
+
+volume_distribution_fnamal_label = "labelmaps_volumes_distribution"
 
 
-def plot_distribution(df, label_mapping, palette="viridis"):
+def legend_properties(group):
+
+    _labels = get_diedrichsen_group_labels(group)
+
+    if group == SuitAtlasDiedrichsenGroups.ALL.value:
+        return {"bbox_to_anchor": (0.5, -0.425), "ncols": 7}
+    if group == SuitAtlasDiedrichsenGroups.DCN.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    elif group == SuitAtlasDiedrichsenGroups.DENTATE.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    elif group == SuitAtlasDiedrichsenGroups.INTERPOSED.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    elif group == SuitAtlasDiedrichsenGroups.FASTIGIAL.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    elif group == SuitAtlasDiedrichsenGroups.VERMIS.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    elif group == SuitAtlasDiedrichsenGroups.LOBULES.value:
+        return {"bbox_to_anchor": (0.5, -0.225), "ncols": 8}
+    elif group == SuitAtlasDiedrichsenGroups.CRUS.value:
+        return {"bbox_to_anchor": (0.5, -0.175), "ncols": len(_labels)}
+    else:
+        raise ValueError(f"Unknown group name: {group}")
+
+
+def plot_distribution(df, label_mapping, group, palette="viridis"):
 
     # Rename labels
-    df.rename(columns=label_mapping, inplace=True)
+    _df = df.rename(columns=label_mapping, inplace=False)
 
     # Plot the distribution of each column on a single plot
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(12, 7))
     common_norm = False
-    sns.kdeplot(
-        data=df,
-        common_norm=common_norm,
-        palette=palette,
-        linewidth=1,
-        legend=True,
-    )
+    # ax = sns.kdeplot(
+    #     data=_df,
+    #     common_norm=common_norm,
+    #     palette=palette,
+    #     linewidth=1,
+    #     legend=True,
+    # )
+
+    # The above does not create legend handles and labels, so plot the
+    # distribution of each column on a single plot
+    for i, column in enumerate(_df.columns):
+        sns.kdeplot(
+            _df[column],
+            common_norm=common_norm,
+            color=palette[i],
+            linewidth=1,
+            label=column,
+        )
+
+    # (handles, labels) = ax.get_legend_handles_labels()
+    # Add legend with custom placement
+    legend_props = legend_properties(group)
+    plt.legend(loc="lower center", **legend_props)
 
     plt.xlabel("volume ($mm^3$)")
     plt.ylabel("frequency")
@@ -56,7 +105,7 @@ def _build_arg_parser():
     )
     parser.add_argument(
         "in_labelmap_volume_fname",
-        help="Labelmap volumde data filename (*.tsv)",
+        help="Labelmap volume data filename (*.tsv)",
         type=Path,
     )
     parser.add_argument(
@@ -70,8 +119,8 @@ def _build_arg_parser():
         type=Path,
     )
     parser.add_argument(
-        "out_filename",
-        help="Output filename (*.tsv)",
+        "out_dirname",
+        help="Output dirname",
         type=Path,
     )
     return parser
@@ -108,11 +157,45 @@ def main():
     }
 
     lut = read_lut_from_tsv2(args.in_labels_fname)
-    # Normalize colors and remove the background
-    normalized_colors = list(normalize_colors(lut).values())[1:]
 
-    fig = plot_distribution(df, label_mapping, palette=normalized_colors)
-    fig.savefig(args.out_filename)
+    # Plot them in groups so that dissimilar volumes do not hinder gaining
+    # insight from the plot
+    group_names = [
+        SuitAtlasDiedrichsenGroups.ALL,
+        SuitAtlasDiedrichsenGroups.DCN,
+        SuitAtlasDiedrichsenGroups.DENTATE,
+        SuitAtlasDiedrichsenGroups.INTERPOSED,
+        SuitAtlasDiedrichsenGroups.FASTIGIAL,
+        SuitAtlasDiedrichsenGroups.VERMIS,
+        SuitAtlasDiedrichsenGroups.LOBULES,
+        SuitAtlasDiedrichsenGroups.CRUS,
+    ]
+
+    suffix = build_suffix(FigureFileExtension.PNG)
+
+    for group in group_names:
+        # Keep only the labels corresponding to the group
+        _labels = get_diedrichsen_group_labels(group.value)
+        # Removes the background as well
+        _lut = {k: v for k, v in lut.items() if k in _labels}
+        df_group = df[list(map(str, _labels))]
+
+        # Normalize colors
+        normalized_colors = list(normalize_colors(_lut).values())
+
+        fig = plot_distribution(
+            df_group, label_mapping, group.value, palette=normalized_colors
+        )
+
+        file_basename = (
+            volume_distribution_fnamal_label
+            + underscore
+            + group_fname_label
+            + underscore
+            + group.value
+            + suffix
+        )
+        fig.savefig(args.out_dirname / file_basename)
 
 
 if __name__ == "__main__":
