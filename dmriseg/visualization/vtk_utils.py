@@ -304,10 +304,9 @@ def render_labelmap_to_vtk(
         set_camera_view(renderer, anatomical_view)
     else:
         # ToDo
-        # The sagittal and coronal views appear flipped, so it may well be
-        # happening for the only 3D case as well. Also, when the camera view
-        # setting method is called here, all three views (axial, coronal,
-        # sagittal) do not cover the entire height/width of the canvas.
+        # When the camera view setting method is called here, all three views
+        # (axial, coronal, sagittal) do not cover the entire height/width of the
+        # canvas.
         # ToDo
         # Depending the cutting plane, the slice actor may hide the the label
         # actors, so we would need to
@@ -325,23 +324,23 @@ def render_labelmap_to_vtk(
 def set_camera_view(renderer, anatomical_view):
     camera = renderer.GetActiveCamera()
     if anatomical_view == AnatomicalView.AXIAL_SUPERIOR.value:
-        camera.SetPosition(0, 0, 1)
+        camera.SetPosition(0, 0, -1)
         camera.SetViewUp(0, 1, 0)
     elif anatomical_view == AnatomicalView.AXIAL_INFERIOR.value:
-        camera.SetPosition(0, 0, -1)
-        camera.SetViewUp(0, -1, 0)
+        camera.SetPosition(0, 0, 1)
+        camera.SetViewUp(0, 1, 0)
     elif anatomical_view == AnatomicalView.CORONAL_ANTERIOR.value:
         camera.SetPosition(0, 1, 0)
-        camera.SetViewUp(0, 0, 1)
+        camera.SetViewUp(0, 0, -1)
     elif anatomical_view == AnatomicalView.CORONAL_POSTERIOR.value:
         camera.SetPosition(0, -1, 0)
-        camera.SetViewUp(0, 0, 1)
+        camera.SetViewUp(0, 0, -1)
     elif anatomical_view == AnatomicalView.SAGITTAL_LEFT.value:
-        camera.SetPosition(-1, 0, 0)
-        camera.SetViewUp(0, 0, 1)
-    elif anatomical_view == AnatomicalView.SAGITTAL_RIGHT.value:
         camera.SetPosition(1, 0, 0)
-        camera.SetViewUp(0, 0, 1)
+        camera.SetViewUp(0, 0, -1)
+    elif anatomical_view == AnatomicalView.SAGITTAL_RIGHT.value:
+        camera.SetPosition(-1, 0, 0)
+        camera.SetViewUp(0, 0, -1)
     else:
         raise ValueError(
             f"Camera view must be one of {AnatomicalView.__members__.values()}; {anatomical_view} provided"
