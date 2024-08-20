@@ -145,6 +145,10 @@ def main():
     # participants
     # - We want to understand if the differences between participants are
     # consistent when averaged over labels
+    # ToDo
+    # Not sure the above is OK: we are interested in measuring the difference
+    # across CONTRASTS (our fixed effect); whereas PARTICIPANTS are our random
+    # effect
     axis = 1
     particip_metric_values_ref = df_metric_ref[labels].mean(axis=axis)
     particip_metric_values = df_metric[labels].mean(axis=axis)
