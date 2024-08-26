@@ -82,7 +82,7 @@ for _measure_name in "${measure_names[@]}"; do
   # Perform the statistical test
   python /home/jhlegarreta/src/dmriseg/scripts/compute_pairwise_test.py \
     ${lut_fname} \
-    _measure_name \
+    ${_measure_name} \
     ${out_dirname} \
     --in_performance_fnames "${in_performance_fnames[@]}" \
     --in_contrast_names "${in_contrast_names[@]}"
