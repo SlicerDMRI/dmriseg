@@ -258,8 +258,9 @@ def plot_grouped_violin(
     start_idx = 0
     stop_idx = hue_count
     if use_scatter_legend:
-        start_idx = 3
-        stop_idx = 6
+        contrast_count = df["contrast"].unique()
+        start_idx = len(contrast_count)
+        stop_idx = len(contrast_count) * 2
 
     loc = "upper left"
     bbox_to_anchor = (1.05, 1)
