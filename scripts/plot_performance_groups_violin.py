@@ -12,6 +12,7 @@ as contrast data files are provided.
 """
 
 import argparse
+import copy
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -341,6 +342,51 @@ def aggregate_overall_performance(df, group_name):
     return extended_group_df
 
 
+def filter_infs(dfs, measure, contrast_names):
+
+    # For Dice coefficients or volume similarity, we cannot have NaN or inf
+    # values; for the rest, we need to filter inf values (NaN values are
+    # filtered by default by pandas)
+    if measure in [Measure.DICE.value, Measure.VOLUME_SIMILARITY.value]:
+        assert not any([df.isna().any().any() for df in dfs])
+        assert not any(
+            [
+                np.isinf(df.select_dtypes(include=[np.number]).values).any()
+                for df in dfs
+            ]
+        )
+        _dfs = copy.deepcopy(dfs)
+    else:
+        if any([df.isna().any().any() for df in dfs]):
+            print("NaN values found. They will be filtered.")
+            _dfs = copy.deepcopy(dfs)
+        elif any(
+            [
+                np.isinf(df.select_dtypes(include=[np.number]).values).any()
+                for df in dfs
+            ]
+        ):
+            print("np.inf values found. They will be filtered.")
+            _dfs = [
+                df.replace([np.inf, -np.inf], np.nan, inplace=False)
+                for df in dfs
+            ]
+        else:
+            raise NotImplementedError(
+                "Data checks have not considered this case. Check the data/code."
+            )
+
+    # Check if there is some row where all values are NaN
+    for contrast_name, _df in zip(contrast_names, _dfs):
+        idx = _df[_df.isnull().all(axis=1)].index
+        if not idx.empty:
+            print(
+                f"{idx} contains all NaN values for {measure}; the segmentation probably failed for {contrast_name} contrast"
+            )
+
+    return _dfs
+
+
 def _build_arg_parser():
 
     parser = argparse.ArgumentParser(
@@ -433,6 +479,10 @@ def main():
         get_contrast_from_dir_base(parent_dirname)
         for parent_dirname in parent_dirnames
     ]
+
+    # Filter np.inf values so that the kde can be computed and mean/std dev
+    # stats do not get biased
+    dfs = filter_infs(dfs, args.measure_name, _contrasts)
 
     # Rename the contrast labels to stick to the naming chosen for the paper
     contrasts = list(map(rename_contrasts_plot_labels, _contrasts))
