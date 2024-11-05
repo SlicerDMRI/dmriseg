@@ -236,8 +236,16 @@ def plot_grouped_violin(
 
     plt.ylabel(rename_measure_names_plot_labels(measure_name))
 
-    ylim = get_plot_ylim(measure_name)
-    ax.set_ylim(ylim)
+    ylim = None
+    try:
+        ylim = get_plot_ylim(measure_name)
+    except NotImplementedError:
+        print(
+            f"Measure {measure_name} is not bounded. Continuing the plot without bounds."
+        )
+
+    if ylim is not None:
+        ax.set_ylim(ylim)
 
     # Get the handles and labels
     handles, labels = ax.get_legend_handles_labels()
