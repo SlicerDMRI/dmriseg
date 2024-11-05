@@ -4,6 +4,7 @@ import io
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import matplotlib.text as mtext
 import numpy as np
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from PIL import Image
@@ -206,6 +207,76 @@ def create_mpl_legend(colors, labels, figsize, dpi):
     fig = plt.figure(figsize=_figsize, dpi=dpi)
     legend = fig.legend(
         handles, labels, loc="center", framealpha=1, frameon=False
+    )
+    fig.tight_layout()
+
+    return legend
+
+
+# Borrowed from https://stackoverflow.com/a/71540238
+# Another possibility: make the patch of the title be invisible:
+# https://stackoverflow.com/a/44581524
+class LegendTitle(object):
+    def __init__(self, text_props=None):
+        self.text_props = text_props or {}
+        super(LegendTitle, self).__init__()
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        title = mtext.Text(x0, y0, orig_handle, **self.text_props)
+        handlebox.add_artist(title)
+        return title
+
+
+def create_mpl_legend_section(colors, section_names, labels, figsize, dpi):
+
+    handles = [mpatches.Patch(color=colors[0])]
+    handles.extend([mpatches.Patch(color=color) for color in colors[1:]])
+
+    _labels = ["all"]
+    _labels.extend(labels)
+
+    # legend = plt.legend(handles, labels, loc="center", framealpha=1, frameon=False)
+    # plt.tight_layout()
+
+    # Convert figsize to inches
+    _figsize = (figsize[0] / dpi, figsize[1] / dpi)
+
+    fig = plt.figure(figsize=_figsize, dpi=dpi)
+    longest_sec_name_length = len(max(section_names, key=len))
+    # Multiply the empty strings corresponding to the titles by the length of
+    # the longest title name (and an additional factor to acount for the foint
+    # size ratio) to artificially increase the occupied width, since otherwise
+    # the legend.get_window_extent() call only considers the width of the
+    # regular legend labels
+    import math
+
+    fontsize = 10
+    title_fontsize = 16
+    ratio = math.ceil(title_fontsize / fontsize)
+    legend = fig.legend(
+        [section_names[0]]
+        + [handles[0]]
+        + ["", section_names[1]]
+        + handles[1:],
+        [" " * longest_sec_name_length * ratio]
+        + [_labels[0]]
+        + [
+            " " * longest_sec_name_length,
+            " " * longest_sec_name_length * ratio,
+        ]
+        + _labels[1:],
+        handler_map={
+            str: LegendTitle(
+                {
+                    "fontsize": title_fontsize,
+                }
+            )
+        },
+        loc="center",
+        framealpha=1,
+        frameon=False,
+        fontsize=fontsize,
     )
     fig.tight_layout()
 
