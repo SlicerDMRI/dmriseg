@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from statannotations.Annotator import Annotator
 
 from dmriseg.analysis.measures import Measure, rename_measure_names_plot_labels
 from dmriseg.data.lut.utils import SuitAtlasDiedrichsenGroups
@@ -51,9 +52,6 @@ from dmriseg.visualization.plot_utils import (
     create_mpl_fig_from_legend_props,
     get_plot_ylim,
 )
-
-# from statannotations.Annotator import Annotator
-
 
 label_label = "label"
 score_label = "score"
@@ -120,8 +118,8 @@ def plot_grouped_violin(
     df,
     label_mapping,
     measure_name,
-    stat_signif_pairs,
-    pvalue_labels,
+    stat_signif_pairs=None,
+    pvalue_labels=None,
     palette_name="husl",
     xlabel=False,
     rotate_xlabels=False,
@@ -223,9 +221,10 @@ def plot_grouped_violin(
     )
 
     # Add statistical significance annotations
-    # annotator = Annotator(ax, stat_signif_pairs, **group_data_params)
-    # annotator.configure(loc="outside")
-    # annotator.annotate_custom_annotations(pvalue_labels)
+    if stat_signif_pairs is not None and pvalue_labels is not None:
+        annotator = Annotator(ax, stat_signif_pairs, **group_data_params)
+        annotator.configure(loc="outside")
+        annotator.annotate_custom_annotations(pvalue_labels)
 
     sns.despine(top=True, left=True)
     ax.grid(axis="y")
@@ -448,11 +447,16 @@ def main():
     args = _parse_args(parser)
 
     # Ensure input argument data lengths match
-    assert len(args.in_performance_dirnames) == len(
-        args.in_significance_fnames
-    )
-    assert len(args.in_performance_dirnames) == len(args.in_description_fnames)
-    assert len(args.in_performance_dirnames) == len(args.in_measurement_fnames)
+    if args.in_significance_fnames:
+        assert len(args.in_performance_dirnames) == len(
+            args.in_significance_fnames
+        )
+        assert len(args.in_performance_dirnames) == len(
+            args.in_description_fnames
+        )
+        assert len(args.in_performance_dirnames) == len(
+            args.in_measurement_fnames
+        )
 
     alpha = 0.05
 
@@ -506,38 +510,43 @@ def main():
     # Prepare the data: compose a dataframe where we add the contrast column
     df = prepare_df(dfs, contrasts, args.measure_name, label_mapping)
 
-    from dmriseg.stats.annotation_utils import (
-        create_pval_thres_annot_label_df,
-        format_stat_annotations,
-    )
+    if args.in_significance_fnames:
+        from dmriseg.stats.annotation_utils import (
+            create_pval_thres_annot_label_df,
+            format_stat_annotations,
+        )
 
-    dfs_stats = [
-        pd.read_csv(fname, sep=sep, index_col=[significance_label])
-        for fname in args.in_significance_fnames
-    ]
-    dfs_measurements = [
-        pd.read_csv(fname, sep=sep, index_col=[arg_label])
-        for fname in args.in_measurement_fnames
-    ]
-    dfs_stat_descr = [
-        pd.read_csv(fname, sep=sep) for fname in args.in_description_fnames
-    ]
-    # Ensure that all df_stat_descr are the same
-    [
-        pd.testing.assert_frame_equal(dfs_stat_descr[0], df)
-        for df in dfs_stat_descr
-    ]
+        dfs_stats = [
+            pd.read_csv(fname, sep=sep, index_col=[significance_label])
+            for fname in args.in_significance_fnames
+        ]
+        dfs_measurements = [
+            pd.read_csv(fname, sep=sep, index_col=[arg_label])
+            for fname in args.in_measurement_fnames
+        ]
+        dfs_stat_descr = [
+            pd.read_csv(fname, sep=sep) for fname in args.in_description_fnames
+        ]
+        # Ensure that all df_stat_descr are the same
+        [
+            pd.testing.assert_frame_equal(dfs_stat_descr[0], df)
+            for df in dfs_stat_descr
+        ]
 
-    pvalue_labels, stat_signif_pairs, pval_thres = format_stat_annotations(
-        dfs_stats, dfs_measurements, dfs_stat_descr[0], label_mapping, alpha
-    )
+        pvalue_labels, stat_signif_pairs, pval_thres = format_stat_annotations(
+            dfs_stats,
+            dfs_measurements,
+            dfs_stat_descr[0],
+            label_mapping,
+            alpha,
+        )
 
-    # Save pval_thres to a TSV to be able to tell the thresholds used for the
-    # annotations
-    pval_thres_df = create_pval_thres_annot_label_df(pval_thres)
-    _file_basename = measure + underscore + pval_thres_label + data_suffix
-    fname = args.out_dirname / _file_basename
-    pval_thres_df.to_csv(fname, sep="\t")
+        # Save pval_thres to a TSV to be able to tell the thresholds used for the
+        # annotations
+        pval_thres_df = create_pval_thres_annot_label_df(pval_thres)
+        _file_basename = measure + underscore + pval_thres_label + data_suffix
+        fname = args.out_dirname / _file_basename
+        pval_thres_df.to_csv(fname, sep="\t")
 
     # ToDo
     # If the statistical significance between groups is to be displayed, that
@@ -575,10 +584,14 @@ def main():
         group_df = filter_labels(df, group_name, label_mapping)
         extended_group_df = aggregate_overall_performance(group_df, group_name)
 
+        _stat_signif_pairs = None
+        _pvalue_labels = None
+
         # Keep only the pvalue_labels and pairs of interest
-        _pvalue_labels, _stat_signif_pairs = filter_pvalue_labels(
-            pvalue_labels, stat_signif_pairs, group_name, label_mapping
-        )
+        if args.in_significance_fnames:
+            _pvalue_labels, _stat_signif_pairs = filter_pvalue_labels(
+                pvalue_labels, stat_signif_pairs, group_name, label_mapping
+            )
 
         # ToDo
         # Prepend the group significance labels OR mark only the group
