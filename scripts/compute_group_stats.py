@@ -97,6 +97,11 @@ def _build_arg_parser():
         nargs="+",
         type=str,
     )
+    parser.add_argument(
+        "--out_file_label",
+        help="Output file label",
+        type=str,
+    )
     return parser
 
 
@@ -134,6 +139,10 @@ def main():
     if group_names is None:
         group_names = ["all"]
 
+    out_file_label = (
+        args.out_file_label + underscore if args.out_file_label else ""
+    )
+
     # Loop over measures
     for measure in measures:
         df_group_stats = pd.DataFrame()
@@ -152,6 +161,7 @@ def main():
         _basename = (
             group_fname_label
             + underscore
+            + out_file_label
             + measure.value
             + underscore
             + stats_fname_label
