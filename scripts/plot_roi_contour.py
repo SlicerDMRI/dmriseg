@@ -158,7 +158,7 @@ def main():
     parser = _build_arg_parser()
     args = _parse_args(parser)
 
-    # Ensure that we have as many labelmap filenams as labelmap names
+    # Ensure that we have as many labelmap filenames as labelmap names
     assert len(args.in_labelmap_fnames) == len(args.in_labelmap_names)
 
     # Data is assumed to be in a common space
