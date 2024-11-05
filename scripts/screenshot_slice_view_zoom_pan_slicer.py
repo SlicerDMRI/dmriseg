@@ -5,11 +5,13 @@ given, transparency is applied to the background pixels.
 """
 
 import argparse
+import importlib.metadata
 import sys
 import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import ScreenCapture
 import slicer
 import vtk
@@ -238,7 +240,20 @@ def mask_image(volume_scrnsht_fname, mask_scrnsht_fname):
     return apply_mask_transparency(volume_scrnsht_fname, mask_scrnsht_fname)
 
 
-def load_data(volume_fname, segmentation_fname=None, lut_fname=None):
+def get_noninterest_labels_names(lut_fname, labels):
+
+    columns = ["ID", "Name", "R", "G", "B", "alpha"]
+    df = pd.read_csv(
+        str(lut_fname), delimiter=" ", header=None, names=columns, skiprows=3
+    )
+    label_names = list(df.loc[~df["ID"].isin(labels), "Name"].values)
+    label_names = [s.replace("_", " ") for s in label_names]
+    return label_names
+
+
+def load_data(
+    volume_fname, segmentation_fname=None, lut_fname=None, label_ids=None
+):
 
     # Load the input volume
     slicer.util.loadVolume(volume_fname)
@@ -253,7 +268,21 @@ def load_data(volume_fname, segmentation_fname=None, lut_fname=None):
         properties = {}
         if color_table:
             properties = {"colorNodeID": color_table.GetID()}
-        slicer.util.loadSegmentation(segmentation_fname, properties=properties)
+        sgmtn_node = slicer.util.loadSegmentation(
+            segmentation_fname, properties=properties
+        )
+        sgmtn = sgmtn_node.GetSegmentation()
+
+        # Loop over each segment and set visibility to off
+        if label_ids:
+            for label_id in label_ids:
+                segment = sgmtn.GetSegment(label_id)
+                if segment:
+                    sgmtn_node.GetDisplayNode().SetSegmentVisibility(
+                        label_id, False
+                    )
+                else:
+                    print(f"Segment '{label_id}' not found.")
 
 
 def _build_arg_parser():
@@ -296,6 +325,22 @@ def _build_arg_parser():
         help="Input mask filename (*.nii.gz)",
         type=Path,
     )
+    parser.add_argument(
+        "--in_segmentation_filename",
+        help="Input segmentation filename (*.nii.gz)",
+        type=Path,
+    )
+    parser.add_argument(
+        "--in_color_lut_filename",
+        help="Input color LUT table filename (*.txt)",
+        type=Path,
+    )
+    parser.add_argument(
+        "--labels",
+        help="Subset of labels for the ANOVA analysis",
+        type=int,
+        nargs="+",
+    )
     return parser
 
 
@@ -311,9 +356,28 @@ def main():
     parser = _build_arg_parser()
     args = _parse_args(parser)
 
+    # Install pandas if not installed already in 3D Slicer
+    package_name = "pandas"
+    try:
+        importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
+        slicer.util.pip_install("pandas")
+
+    label_names = None
+    if args.in_color_lut_filename is not None:
+        label_names = get_noninterest_labels_names(
+            args.in_color_lut_filename, args.labels
+        )
+
     load_data(
         args.in_volume_filename,
+        segmentation_fname=args.in_segmentation_filename,
+        lut_fname=args.in_color_lut_filename,
+        label_ids=label_names,
     )
+
+    # Refresh the scene to apply visibility changes
+    slicer.app.processEvents()
 
     width = 1920
     height = 1080
