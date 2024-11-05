@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Plot the contour of the region of interest corresponding to the given label
-value in a labelmap. If multiple labelmaps are given, they are colored according
-to the given colormap name. Similar to the Diedrichsen 2011 NIMG Fig3 paper.
+Plot the contours of the regions of interest corresponding to the given label
+values in a labelmap. If multiple label values are given, they are colored
+according to the given colormap name. The first provided labelmap is assumed to
+be the ground truth, and all its labels are colored with the same color.
 """
 
 import argparse
@@ -26,7 +27,7 @@ from dmriseg.io.utils import append_label_to_fname, legend_label
 from dmriseg.visualization.actor_utils import create_clip_actor
 from dmriseg.visualization.plot_utils import (
     create_img_from_mpl_legend,
-    create_mpl_legend,
+    create_mpl_legend_section,
     paste_image_into_canvas,
     rescale_image_keep_aspect,
 )
@@ -35,9 +36,11 @@ from dmriseg.visualization.vtk_utils import compute_mask_planar_intersection
 
 def plot_contour(
     ref_anat_img,
-    label_imgs,
+    gnd_th_label_img,
+    pred_label_img,
     labels,
-    colors,
+    gnd_th_color,
+    label_colors,
     origin=None,
     opacity=0.7,
     linewidth=4.5,
@@ -45,13 +48,29 @@ def plot_contour(
 ):
 
     # Extract ROI using the label of interest
-    roi_img = [extract_roi_from_label_image(img, labels) for img in label_imgs]
+    gnd_th_roi_imgs = [
+        extract_roi_from_label_image(gnd_th_label_img, label)
+        for label in labels
+    ]
+    pred_roi_imgs = [
+        extract_roi_from_label_image(pred_label_img, label) for label in labels
+    ]
 
     # Binarize ROIs
-    mask_img_data = [create_mask_from_label_image(img) for img in roi_img]
-    mask_img = [
-        nib.nifti1.Nifti1Image(img_data, affine=img.affine)
-        for img_data, img in zip(mask_img_data, label_imgs)
+    gnd_th_mask_img_data = [
+        create_mask_from_label_image(img) for img in gnd_th_roi_imgs
+    ]
+    gnd_th_mask_img = [
+        nib.nifti1.Nifti1Image(img_data, affine=gnd_th_label_img.affine)
+        for img_data in gnd_th_mask_img_data
+    ]
+
+    pred_mask_img_data = [
+        create_mask_from_label_image(img) for img in pred_roi_imgs
+    ]
+    pred_mask_img = [
+        nib.nifti1.Nifti1Image(img_data, affine=pred_label_img.affine)
+        for img_data in pred_mask_img_data
     ]
 
     normal = (0, 0, 1)
@@ -67,7 +86,25 @@ def plot_contour(
 
     fill_contour = False
     clip_actor = []
-    for _roi_img, _color in zip(mask_img, colors):
+
+    # Compute the intersection of the ground truth
+    for _roi_img in gnd_th_mask_img:
+        polydata_algorithm = compute_mask_planar_intersection(
+            _roi_img.get_fdata(),
+            clip_plane,
+            affine,
+            fill_contour=fill_contour,
+        )
+
+        _actor = create_clip_actor(
+            polydata_algorithm,
+            color=gnd_th_color,
+            opacity=opacity,
+            linewidth=linewidth,
+        )
+        clip_actor.append(_actor)
+
+    for _roi_img, _color in zip(pred_mask_img, label_colors):
         # Compute the intersection
         polydata_algorithm = compute_mask_planar_intersection(
             _roi_img.get_fdata(),
@@ -133,7 +170,7 @@ def _build_arg_parser():
         type=int,
     )
     parser.add_argument(
-        "--cmap_name", help="Colormap name", type=str, default="Greys"
+        "--cmap_name", help="Colormap name", type=str, default="rainbow"
     )
     parser.add_argument(
         "--transparent_bckgnd",
@@ -165,7 +202,7 @@ def main():
     ref_anat_img = nib.load(args.in_ref_anat_img_fname)
     label_imgs = [nib.load(fname) for fname in args.in_labelmap_fnames]
 
-    num_colors = len(label_imgs)
+    num_colors = len(args.labels)
     cmap_name = args.cmap_name
     cmap = plt.get_cmap(cmap_name)
 
@@ -177,6 +214,12 @@ def main():
         _num_colors = num_colors + 1
         _idx = 1
 
+    # Use a gray color for the ground truth
+    gnd_th_color = (0.586082276047674, 0.586082276047674, 0.586082276047674)
+
+    # ToDo
+    # Provide the lut and pick the colors corresponding to the labels
+
     # Define the positions to sample colors from the colormap
     # Positions range from 0 to 1, where 0 is the start (lightest) and 1 is the end (darkest)
     positions = np.linspace(0, 1, _num_colors)[_idx:]
@@ -186,10 +229,13 @@ def main():
     opacity = 0.7
     linewidth = 4.5
     background = window.colors.white
+    # Assume the first image is the ground truth label image
     scene = plot_contour(
         ref_anat_img,
-        label_imgs,
+        label_imgs[0],
+        label_imgs[1],
         args.labels,
+        gnd_th_color,
         colors,
         origin=args.origin,
         opacity=opacity,
@@ -217,7 +263,9 @@ def main():
         contour_img.save(args.out_fname, dpi=(dpi, dpi))
 
     # Create a legend to record the colors and save it to a file
-    legend = create_mpl_legend(colors, args.in_labelmap_names, size, dpi)
+    legend = create_mpl_legend_section(
+        [gnd_th_color, *colors], args.in_labelmap_names, args.labels, size, dpi
+    )
     _lgnd_img = create_img_from_mpl_legend(legend, dpi)
     rescaled_lgnd_img = rescale_image_keep_aspect(_lgnd_img, size)
     lgnd_image = paste_image_into_canvas(rescaled_lgnd_img, size)
