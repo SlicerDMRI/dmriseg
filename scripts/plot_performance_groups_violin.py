@@ -571,6 +571,7 @@ def main():
     # Generate plots: one containing each labels as a separate entity, then
     # averaging the performances across labels in each group
     group_names = [
+        SuitAtlasDiedrichsenGroups.ALL,
         SuitAtlasDiedrichsenGroups.DCN,
         SuitAtlasDiedrichsenGroups.DENTATE,
         SuitAtlasDiedrichsenGroups.INTERPOSED,
