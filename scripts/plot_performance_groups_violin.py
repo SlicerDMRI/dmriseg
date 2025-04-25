@@ -586,6 +586,8 @@ def main():
         SuitAtlasDiedrichsenGroups.VERMIS,
         SuitAtlasDiedrichsenGroups.LOBULES,
         SuitAtlasDiedrichsenGroups.CRUS,
+        SuitAtlasDiedrichsenGroups.ANTERIOR_LOBE,
+        SuitAtlasDiedrichsenGroups.POSTERIOR_LOBE,
     ]
 
     palette_name = "husl"

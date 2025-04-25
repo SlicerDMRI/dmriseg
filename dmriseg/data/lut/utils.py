@@ -91,6 +91,8 @@ class SuitAtlasDiedrichsenGroups(enum.Enum):
     LOBULES = "lobules"
     VERMIS = "vermis"
     RH = "rh"
+    ANTERIOR_LOBE = "anterior_lobe"
+    POSTERIOR_LOBE = "posterior_lobe"
 
 
 suit_atlas_gh_url_base = (
@@ -580,6 +582,10 @@ def get_diedrichsen_group_labels(group_name):
         return [1, 2, 3, 4, 5, 7, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28]
     elif group_name == SuitAtlasDiedrichsenGroups.CRUS.value:
         return [8, 10, 11, 13]
+    elif group_name == SuitAtlasDiedrichsenGroups.ANTERIOR_LOBE.value:
+        return [1, 2, 3, 4]
+    elif group_name == SuitAtlasDiedrichsenGroups.POSTERIOR_LOBE.value:
+        return [5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25]
     elif group_name == SuitAtlasDiedrichsenGroups.ALL.value:
         return list(range(1, 35))
     else:
@@ -608,5 +614,9 @@ def rename_suit_atlas_diedrichsen_groups_plot_labels(group_name):
         return "Vermis"
     elif group_name == SuitAtlasDiedrichsenGroups.RH.value:
         return "Rh"
+    elif group_name == SuitAtlasDiedrichsenGroups.ANTERIOR_LOBE.value:
+        return "anterior lobe"
+    elif group_name == SuitAtlasDiedrichsenGroups.POSTERIOR_LOBE.value:
+        return "posterior lobe"
     else:
         raise NotImplementedError(f"Group not recognized: {group_name}")

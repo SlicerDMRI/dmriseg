@@ -2,7 +2,26 @@
 
 dirname="/mnt/data/cerebellum_parc/experiments_minimal_pipeline/plots/figures/performance_plots_aggr"
 
-file_rootnames=("dice_all" "hd95_all" "msd_all" "cm_dist_all" "vs_all" "lab_detect_rate_all")
+file_rootnames=(
+  "dice_all"
+  "hd95_all"
+  "msd_all"
+  "cm_dist_all"
+  "vs_all"
+  "lab_detect_rate_all"
+  "dice_anterior_lobe"
+  "hd95_anterior_lobe"
+  "msd_anterior_lobe"
+  "cm_dist_anterior_lobe"
+  "vs_anterior_lobe"
+  "lab_detect_rate_anterior_lobe"
+  "dice_posterior_lobe"
+  "hd95_posterior_lobe"
+  "msd_posterior_lobe"
+  "cm_dist_posterior_lobe"
+  "vs_posterior_lobe"
+  "lab_detect_rate_posterior_lobe"
+)
 
 export_dpi=300
 
