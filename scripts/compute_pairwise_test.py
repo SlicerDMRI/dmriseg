@@ -96,6 +96,10 @@ def main():
         ]
     )
 
+    columns_of_interest = None
+    if args.labels:
+        columns_of_interest = list(map(str, args.labels))
+
     (
         data_df,
         depvar_label,
@@ -105,7 +109,7 @@ def main():
         dfs,
         args.measure_name,
         args.in_contrast_names,
-        columns_of_interest=list(map(str, args.labels)),
+        columns_of_interest=columns_of_interest,
     )
 
     # When parametric=True, the below call is equivalent to
