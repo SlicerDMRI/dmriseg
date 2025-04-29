@@ -15,7 +15,10 @@ from statsmodels.stats.anova import AnovaRM
 from dmriseg.analysis.measures import Measure
 from dmriseg.io.file_extensions import DelimitedValuesFileExtension
 from dmriseg.io.utils import build_suffix, participant_label_id
-from dmriseg.utils.stat_preparation_utils import prepare_data_for_anova
+from dmriseg.utils.stat_preparation_utils import (
+    filter_nonmutual_participants,
+    prepare_data_for_anova,
+)
 
 
 def _build_arg_parser():
@@ -97,7 +100,7 @@ def main():
         _subject_label,
         within_label,
     ) = prepare_data_for_anova(
-        dfs,
+        dfs_filtered,
         measure,
         args.contrast_names,
         columns_of_interest=columns_of_interest,
