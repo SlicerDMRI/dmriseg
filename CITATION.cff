@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Towards an Informed Choice of Diffusion MRI Image Contrasts for Cerebellar Segmentation"
+authors:
+  - family-names: Legarreta
+    given-names: Jon Haitz
+  - family-names: Lan
+    given-names: Zhou
+  - family-names: Chen
+    given-names: Yuqian
+  - family-names: Zhang
+    given-names: Fan
+  - family-names: Yeterian
+    given-names:  Edward H.
+  - family-names: Makris
+    given-names: Nikos
+  - family-names: Rushmore
+    given-names: Richard J.
+  - family-names: Rathi
+    given-names: Yogesh
+  - family-names: O'Donnell
+    given-names: Lauren J.
+doi: 10.1002/hbm.70317
+journal: "Human Brain Mapping"
+issue: 11
+month: 8
+start: e70317
+type: article
+volume: 46
+url: "https://onlinelibrary.wiley.com/doi/full/10.1002/hbm.70317"
