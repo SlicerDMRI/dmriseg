@@ -51,7 +51,7 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 test = [
-    "pytest >= 5.3",
+    "pytest >= 7.3.2",
     "pytest-cov",
     "pytest-pep8",
     "pytest-xdist",
